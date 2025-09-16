@@ -12,7 +12,7 @@ Your first step is to fork the Git repository and create a private repository un
 
    Run the following command to create a bare clone of the original repository. This clone will be removed after setting up the private repository. Replace `AssignmentX` with the actual name of the repository (e.g., `Assignment1`).
    ```bash
-   git clone --bare git@github.com:HSG-DS-HS24/AssignmentX.git
+   git clone --bare git@github.com:HSG-DS-HS25/AssignmentX.git
    ```
 
 2. **Create a New Private Repository on GitHub**  
@@ -52,7 +52,7 @@ To keep your fork up-to-date with the original repository, you can add it as a r
 
    Add the original repository as an upstream remote and disable pushing to it:
    ```bash
-   git remote add upstream git@github.com:HSG-DS-HS24/AssignmentX.git
+   git remote add upstream git@github.com:HSG-DS-HS25/AssignmentX.git
    git remote set-url --push upstream DISABLE
    ```
 
@@ -66,7 +66,7 @@ To keep your fork up-to-date with the original repository, you can add it as a r
    ```
    origin   git@github.com:<your_username>/AssignmentX.git (fetch)
    origin   git@github.com:<your_username>/AssignmentX.git (push)
-   upstream git@github.com:HSG-DS-HS23/AssignmentX.git (fetch)
+   upstream git@github.com:HSG-DS-HS25/AssignmentX.git (fetch)
    upstream DISABLE (push)
    ```
 
