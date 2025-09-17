@@ -64,10 +64,16 @@ In the terminal, navigate to the `Tasks` folder using `cd`. Then, build and run 
 
 #### MacOS / Linux
 
-To run:
+To run (with tests for task 2):
 
 ```bash
 ./gradlew build
+./gradlew run -PchooseMain=io.grpc.filesystem.task2.MapReduce --args="input/pigs.txt output/output-task2.txt"
+```
+
+To run (without tests):
+```bash
+./gradlew build -x test
 ./gradlew run -PchooseMain=io.grpc.filesystem.task2.MapReduce --args="input/pigs.txt output/output-task2.txt"
 ```
 
