@@ -2,6 +2,11 @@
 
 To create a private fork of the assignment repository and set up your own repository, follow these steps:
 
+P.S. the following steps will require an SSH key that can be generated following the instructions here:
+https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account
+
+Alternativly a private token can also be used temoraily, where all "git@github.com:" references need to be replaced with “https://github.com/"
+
 ## 1. Fork the Assignment Repository and Set Up a Private Repository
 
 Your first step is to fork the Git repository and create a private repository under your GitHub account.
