@@ -19,7 +19,7 @@ public class CheckOutput {
 
         // Read and map the original file
         Map<String, Integer> original = new HashMap<>();
-        BufferedReader bf1 = new BufferedReader(new FileReader("output/output.txt"));
+        BufferedReader bf1 = new BufferedReader(new FileReader("output/output-task2.txt"));
         while ((l1 = bf1.readLine()) != null) {
             if (!l1.isEmpty()) {
                 String[] subStrings = l1.split(":");
