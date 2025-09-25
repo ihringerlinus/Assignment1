@@ -62,11 +62,9 @@ public class MapReduce {
      * @return The filtered line of text.
      */
     public static String filterPunctuations(String line) {
-        /*
-         * Insert your code here.
-         * Remove any punctuation from the line using regex like "\\p{Punct}".
-         */
-        return null; // Replace with the filtered line
+        if (line == null) return null;
+        // Entfernt alle Satzzeichen außer Buchstaben, Zahlen und Leerzeichen
+        return line.replaceAll("[^a-zA-Z0-9\s]", "");
     }
 
     /**
@@ -76,11 +74,9 @@ public class MapReduce {
      * @return An array of words from the input line.
      */
     public static String[] splitTextIntoWords(String line) {
-        /*
-         * Insert your code here.
-         * Split the text using regex like "\\s+" to extract words.
-         */
-        return null; // Replace with an array of words
+        if (line == null) return new String[0];
+        // Teilt die Zeile an Whitespaces
+        return line.trim().split("\\s+");
     }
 
     /**
@@ -90,11 +86,9 @@ public class MapReduce {
      * @return True if the word is valid, false otherwise.
      */
     public static boolean isValidWord(String word) {
-        /*
-         * Insert your code here.
-         * Use regex to ensure the word is valid (e.g., "^[a-zA-Z0-9]+$").
-         */
-        return false; // Replace with actual condition
+        if (word == null || word.isEmpty()) return false;
+        // Prüft, ob das Wort nur aus Buchstaben und Zahlen besteht
+        return word.matches("^[a-zA-Z0-9]+$");
     }
 
     /**
@@ -104,12 +98,29 @@ public class MapReduce {
      * @throws IOException If an error occurs during file I/O.
      */
     public static void map(String inputFilePath) throws IOException {
-
-        /*
-         * Insert your code here.
-         * Use filterPunctuations, splitTextIntoWords, isValidWord, and mapWordToCount functions to map the words.
-         * Save the map output in a file named "map-chunk001" in the folder of the inputFilePath.
-         */
+        File inputFile = new File(inputFilePath);
+        File mapFile = new File(inputFile.getParent(), "map-" + inputFile.getName().replace(".txt", "") + ".txt");
+        java.util.HashMap<String, Integer> wordCount = new java.util.HashMap<>();
+        try (BufferedReader br = new BufferedReader(new FileReader(inputFile))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String filtered = filterPunctuations(line);
+                String[] words = splitTextIntoWords(filtered);
+                for (String word : words) {
+                    if (isValidWord(word)) {
+                        word = word.toLowerCase();
+                        wordCount.put(word, wordCount.getOrDefault(word, 0) + 1);
+                    }
+                }
+            }
+        }
+        // Schreibe die Map in die Datei
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(mapFile))) {
+            for (Map.Entry<String, Integer> entry : wordCount.entrySet()) {
+                bw.write(entry.getKey() + "," + entry.getValue());
+                bw.newLine();
+            }
+        }
     }
 
     /**
@@ -120,11 +131,21 @@ public class MapReduce {
      * @throws IOException If an error occurs during file I/O.
      */
     public static Map<String, Integer> collectWordCounts(String[] mapFiles) throws IOException {
-        /*
-         * Insert your code here.
-         * Parse the map files to extract word-count pairs and return them in a map.
-         */
-        return null; // Replace with actual word count map
+        java.util.HashMap<String, Integer> totalCounts = new java.util.HashMap<>();
+        for (String mapFilePath : mapFiles) {
+            try (BufferedReader br = new BufferedReader(new FileReader(mapFilePath))) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    String[] parts = line.split(",");
+                    if (parts.length == 2) {
+                        String word = parts[0];
+                        int count = Integer.parseInt(parts[1]);
+                        totalCounts.put(word, totalCounts.getOrDefault(word, 0) + count);
+                    }
+                }
+            }
+        }
+        return totalCounts;
     }
 
     /**
@@ -135,12 +156,15 @@ public class MapReduce {
      * @throws IOException If an error occurs during file I/O.
      */
     public static void reduce(String mapDirPath, String outputFilePath) throws IOException {
-
-        /*
-         * Insert your code here.
-         * Use collectWordCounts and aggregateWordCounts functions to aggregate word counts.
-         * Save the output to the specified outputFilePath.
-         */
+        File mapDir = new File(mapDirPath);
+        File[] mapFiles = mapDir.listFiles((dir, name) -> name.startsWith("map-chunk"));
+        if (mapFiles == null) return;
+        String[] mapFilePaths = new String[mapFiles.length];
+        for (int i = 0; i < mapFiles.length; i++) {
+            mapFilePaths[i] = mapFiles[i].getPath();
+        }
+        Map<String, Integer> wordCounts = collectWordCounts(mapFilePaths);
+        storeFinalCounts(wordCounts, outputFilePath);
     }
 
     /**
@@ -151,10 +175,14 @@ public class MapReduce {
      * @throws IOException If an error occurs during file I/O.
      */
     public static void storeFinalCounts(Map<String, Integer> wordCounts, String outputFilePath) throws IOException {
-        /*
-         * Insert your code here.
-         * Sort the wordCounts map and write it to the output file.
-         */
+        // Sortiere die Map nach Wort (alphabetisch)
+        java.util.TreeMap<String, Integer> sorted = new java.util.TreeMap<>(wordCounts);
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFilePath))) {
+            for (Map.Entry<String, Integer> entry : sorted.entrySet()) {
+                bw.write(entry.getKey() + ": " + entry.getValue());
+                bw.newLine();
+            }
+        }
     }
 
     public static void main(String[] args) throws IOException { // update the main function if required
