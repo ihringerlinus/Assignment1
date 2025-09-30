@@ -62,9 +62,12 @@ public class MapReduce {
      * @return The filtered line of text.
      */
     public static String filterPunctuations(String line) {
-        if (line == null) return null;
-        // Entfernt alle Satzzeichen außer Buchstaben, Zahlen und Leerzeichen
-        return line.replaceAll("[^a-zA-Z0-9\s]", "");
+        if (line == null) return "";
+
+        String filtered = line.replaceAll("[^a-zA-Z0-9\\s]", "");
+
+        filtered = filtered.trim().replaceAll("\\s+", " ");
+        return filtered.toLowerCase();
     }
 
     /**
@@ -100,8 +103,9 @@ public class MapReduce {
     public static void map(String inputFilePath) throws IOException {
         File inputFile = new File(inputFilePath);
         File mapFile = new File(inputFile.getParent(), "map-" + inputFile.getName().replace(".txt", "") + ".txt");
-        java.util.HashMap<String, Integer> wordCount = new java.util.HashMap<>();
-        try (BufferedReader br = new BufferedReader(new FileReader(inputFile))) {
+        //java.util.HashMap<String, Integer> wordCount = new java.util.HashMap<>();
+        try (BufferedReader br = new BufferedReader(new FileReader(inputFile));
+        BufferedWriter bw = new BufferedWriter(new FileWriter(mapFile))) {
             String line;
             while ((line = br.readLine()) != null) {
                 String filtered = filterPunctuations(line);
@@ -109,18 +113,14 @@ public class MapReduce {
                 for (String word : words) {
                     if (isValidWord(word)) {
                         word = word.toLowerCase();
-                        wordCount.put(word, wordCount.getOrDefault(word, 0) + 1);
+                        bw.write(word + ":1");
+                        bw.newLine();
                     }
                 }
             }
         }
-        // Schreibe die Map in die Datei
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(mapFile))) {
-            for (Map.Entry<String, Integer> entry : wordCount.entrySet()) {
-                bw.write(entry.getKey() + "," + entry.getValue());
-                bw.newLine();
-            }
-        }
+
+
     }
 
     /**
@@ -136,7 +136,8 @@ public class MapReduce {
             try (BufferedReader br = new BufferedReader(new FileReader(mapFilePath))) {
                 String line;
                 while ((line = br.readLine()) != null) {
-                    String[] parts = line.split(",");
+                    String[] parts = line.split(":");
+                    System.out.println("Reading line: " + line);
                     if (parts.length == 2) {
                         String word = parts[0];
                         int count = Integer.parseInt(parts[1]);
@@ -145,7 +146,9 @@ public class MapReduce {
                 }
             }
         }
+
         return totalCounts;
+
     }
 
     /**
@@ -157,7 +160,13 @@ public class MapReduce {
      */
     public static void reduce(String mapDirPath, String outputFilePath) throws IOException {
         File mapDir = new File(mapDirPath);
-        File[] mapFiles = mapDir.listFiles((dir, name) -> name.startsWith("map-chunk"));
+
+        File[] mapFiles = mapDir.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.startsWith("map") && name.endsWith(".txt");
+            }
+        });
         if (mapFiles == null) return;
         String[] mapFilePaths = new String[mapFiles.length];
         for (int i = 0; i < mapFiles.length; i++) {
@@ -175,11 +184,25 @@ public class MapReduce {
      * @throws IOException If an error occurs during file I/O.
      */
     public static void storeFinalCounts(Map<String, Integer> wordCounts, String outputFilePath) throws IOException {
-        // Sortiere die Map nach Wort (alphabetisch)
-        java.util.TreeMap<String, Integer> sorted = new java.util.TreeMap<>(wordCounts);
+
+        java.util.List<Map.Entry<String, Integer>> entries = new java.util.ArrayList<>(wordCounts.entrySet());
+
+
+        java.util.Collections.sort(entries, new java.util.Comparator<Map.Entry<String, Integer>>() {
+            @Override
+            public int compare(Map.Entry<String, Integer> e1, Map.Entry<String, Integer> e2) {
+                int cmp = e2.getValue().compareTo(e1.getValue());
+                if (cmp == 0) {
+                    return e1.getKey().compareTo(e2.getKey());
+                }
+                return cmp;
+            }
+        });
+
+        // Ausgabe in die Datei schreiben
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFilePath))) {
-            for (Map.Entry<String, Integer> entry : sorted.entrySet()) {
-                bw.write(entry.getKey() + ": " + entry.getValue());
+            for (Map.Entry<String, Integer> entry : entries) {
+                bw.write(entry.getKey() + ":" + entry.getValue());
                 bw.newLine();
             }
         }
